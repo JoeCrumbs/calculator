@@ -1,0 +1,15 @@
+.calculator-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    max-width: 400px;
+    margin: auto;
+}
+
+#display {
+    display: flex;
+    max-width: 400px;
+    border: 1px solid black;
+    margin: 50px auto 0 auto;
+    height: 50px;
+}
