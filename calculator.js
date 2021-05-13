@@ -88,7 +88,7 @@ let calculator = {
         }
 
         // execute all calculations where precedence is over
-            let operationFinished = this.operatorPrecedence[newOperator] < this.operatorPrecedence[calculation.lastOperator];
+            let operationFinished = this.operatorPrecedence[newOperator] < this.operatorPrecedence[calculation.lastOperator] || newOperator === ')';
             for (let i = last; i >= 0; i--) {
                 // Is the Equation finished or is a operation with precedence (without open bracket) finished?
                 if ((newOperator === '=' || (!calculations[i].bracketOpen && operationFinished))
@@ -97,8 +97,8 @@ let calculator = {
                     this.getResultAndDeleteCalculation(calculations);
                 } else {
                     calculations[i].executeCalculation(newOperator);
-                    //If clicked button was a closing bracket, get result and delete calculation
-                    if (newOperator=== ')') this.getResultAndDeleteCalculation(calculations);
+                    // get result of last calculation if bracket is finished
+                    if (newOperator === ')') this.getResultAndDeleteCalculation(calculations);
                     return;
                 }
             }
