@@ -13,8 +13,9 @@
 ## Additional Features
 
 - [x] take operator precedence in account and enable the use of brackets
-- display the whole equation
-- [x] use <sup> to format the power operator
+- [x] display the whole equation
+- [x] add a power operatro and use `<sup>` to format the power operator in equations
+- [x] handle input exceptions
 
 
 ## Assignment ([The Odin Project Challenge Nr.4](https://www.theodinproject.com/paths/foundations/courses/foundations/lessons/calculator))
