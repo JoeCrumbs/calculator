@@ -9,29 +9,40 @@
 </head>
 
 <body>
+    <header class="flex-container">
+        <h1>
+            Calculator
+            <a href="https://github.com/JoeCrumbs/calculator">
+                <img alt="GitHub" src="images/GitHub-Mark-Light-32px.png">
+            </a>
+        </h1>
+    </header>
     <main>
-        <div id='display'>0</div>
+        <div id="display-container">
+            <div id="equation"><span id="equation-text"><span id="placeholder">0</span></span></div>
+            <div id="display">0</div>
+        </div>
         <div class="calculator-container">
-            <button id="power">n-power</button>
-            <button id ="root">n-root</button>
-            <button id="clearEntry"> CE </button>
-            <button id="clearAll"> AC </button>
+            <button class="operator">(</button>
+            <button id="closing-bracket" style="opacity: 50%" class="operator">)</button>
+            <button class="operator" id="power">x<sup>y</sup></button>
+            <button class="operator">CE</button>
             <button>7</button>
             <button>8</button>
             <button>9</button>
-            <button id="divide"> / </button>
+            <button class="operator">/</button>
             <button>4</button>
             <button>5</button>
             <button>6</button>
-            <button id="multiply"> x </button>
+            <button class="operator">x</button>
             <button>1</button>
             <button>2</button>
             <button>3</button>
-            <button id="subtract"> - </button>
-            <button>0</button>
+            <button class="operator">-</button>
             <button>.</button>
-            <button id="equals"> = </button>
-            <button id="add"> + </button>
+            <button>0</button>
+            <button class="operator green">=</button>
+            <button class="operator">+</button>
         </div>
     </main>
     <script src="calculator.js"></script>

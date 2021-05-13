@@ -1,5 +1,22 @@
 # calculator
 
+* Live: [Demo](https://joecrumbs.github.io/calculator/)
+* Keyboard Support: use '^' key for the power operator, the rest should be obvious
+
+## Lessons Learned
+
+* Establishing a fixed Goal instead of iterating over new cool features would result in much cleaner code
+* Use more comments and pseudo-code (not doing it was a hassle after long breaks and with growing code)
+* code is never perfect and even if there is still (a lot of) room for improvement for now it works and there ist still a lot to lear in the rest of TOP
+* use commits more often or use more branches
+
+## Additional Features
+
+- [x] take operator precedence in account and enable the use of brackets
+- display the whole equation
+- [x] use <sup> to format the power operator
+
+
 ## Assignment ([The Odin Project Challenge Nr.4](https://www.theodinproject.com/paths/foundations/courses/foundations/lessons/calculator))
 1. [x] Your calculator is going to contain functions for all of the basic math operators you typically find on simple calculators, so start by creating functions for the following items and testing them in your browser’s console.
     1. add
@@ -22,6 +39,6 @@
     1. Pressing “clear” should wipe out any existing data.. make sure the user is really starting fresh after pressing “clear”
     1. Display a snarky error message if the user tries to divide by 0… don’t let it crash your calculator!
 1. [x] EXTRA CREDIT: Users can get floating point numbers if they do the math required to get one, but they can’t type them in yet. Add a `.` button and let users input decimals! Make sure you don’t let them type more than one though: `12.3.56.5.` It is hard to do math on these numbers. (disable the decimal button if there’s already one in the display)
-1. [ ] EXTRA CREDIT: Make it look nice! This can be a good portfolio project… but not if it’s UGLY. At least make the operations a different color from the keypad buttons.
+1. [x] EXTRA CREDIT: Make it look nice! This can be a good portfolio project… but not if it’s UGLY. At least make the operations a different color from the keypad buttons.
 1. [x] EXTRA CREDIT: Add a “backspace” button, so the user can undo if they click the wrong number.
-1. [ ] EXTRA CREDIT: Add keyboard support!
+1. [x] EXTRA CREDIT: Add keyboard support!
