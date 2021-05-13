@@ -14,7 +14,7 @@
 
 - [x] take operator precedence in account and enable the use of brackets
 - [x] display the whole equation
-- [x] add a power operatro and use `<sup>` to format the power operator in equations
+- [x] add a power operator and use `<sup>` to format the power operator in equations
 - [x] handle input exceptions
 
 
