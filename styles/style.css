@@ -148,3 +148,7 @@ button:hover {
 .disabled {
     opacity: 50%;
 }
+
+.disable-zoom {
+    touch-action: manipulation;
+  }
