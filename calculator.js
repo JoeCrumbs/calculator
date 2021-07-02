@@ -1,192 +1,86 @@
 let calculator = {
-    Calculation: function(initialCurrentNumber, initialOperator, initialInput, bracketOpen) {
-        this.currentNumber = initialCurrentNumber;
-        this.lastOperator = initialOperator;
-        this.savedNumber = initialInput;
-        this.bracketOpen = bracketOpen;
-    },
-    operatorPrecedence: {
-        '+': 1,
-        '-': 1,
-        'x': 2,
-        '/': 2,
-        '^': 3
-    },
-    setCalculationProtoype: function() {
-        this.Calculation.prototype = {
-            constructor: this.Calculation,
-            '+': function(num1, num2) {
-                return num1 + num2;
-            },
-            '-': function(num1, num2) {
-                return num1 - num2;
-            },
-            'x': function(num1, num2) {
-                return num1 * num2;
-            },
-            '/': function(num1, num2) {
-                return num1 / num2;
-            },
-            '^': function (num1, num2){
-                return Math.pow(num1, num2);
-            },
-            '=': function(num1, num2) {
-                return num2 ? num2 : num1;
-            },
-            operate: function(operator) {
-                return this[operator](this.savedNumber,this.currentNumber);
-            },
-            executeCalculation: function(buttonId) {
-                let result = this.currentNumber;
-        
-                // Execute lastOperator
-                if (this.lastOperator) {
-                    this.currentNumber = this.operate(this.lastOperator);
-                    result = this.currentNumber;
-                }
-        
-                // Update Values
-                    this.savedNumber = this.currentNumber;
-                    this.lastOperator = buttonId;
-                    this.currentNumber = 0;
-                return result;
-            }
-        }
-    },
-    // take result from finished calculation and use it in previous calculation
-    getResultAndDeleteCalculation: function(calculations) {
-        let result = calculations[calculations.length -1].savedNumber;
-        calculations.pop();
-        calculations[calculations.length - 1].currentNumber = result;
-    },
+    DISPLAY: document.querySelector('#display'),
+    EQUATION: document.querySelector('#equation-text'),
+    //operator methods
+    '/': (num1, num2) => num1 / (num2 || 0),
+    '*': (num1, num2) => num1 * (num2 || 0),
+    '-': (num1, num2) => num1 - (num2 || 0),
+    '+': (num1, num2) => num1 + (num2 || 0),
+    '^': (num1, num2) => Math.pow(num1, (num2 || 0)),
     // clear one or two chars, dependent on last 3 chars
     clear: function(equation) {
-        let lastChar = equation.charAt(equation.length - 1);
-        if (lastChar === ' ') {
-            equation = equation.slice(0,-2);
-        } else {
-            equation = equation.slice(0,-1);
-            if (equation.charAt(equation.length - 1) === ' ') {
-                equation = equation.slice(0,-1);
-            }
-        }
-        return equation;
+        equation.pop();
+        this.EQUATION.innerHTML = this.formatEquation((equation)) || '<span id="placeholder">0</span>';
+        this.EQUATION.scrollLeft = this.EQUATION.scrollWidth;
+        let openBrackets = this.countOpenBrackets(equation);
+        this.DISPLAY.textContent = (equation.length === 0) ? '0' :
+            this.roundNumber(this.processEquation(equation.concat(Array(openBrackets).fill(')'))));
     },
-    //calculate if possible, if not open a new calculation
-    checkPrecedenceAndCalculate: function(newOperator,calculations) {
-        let last = calculations.length - 1;
-        let calculation = calculations[last];
-        if (newOperator === '(') {
-            calculations.push(new this.Calculation(0, '', 0, true));
-            return
-        }
-
-        //check if new Operator takes precedence - if true then add new Calculation to determine precedence first
-        if (this.operatorPrecedence[newOperator] > this.operatorPrecedence[calculation.lastOperator]) {
-            calculations.push(new this.Calculation(0, newOperator, calculation.currentNumber, false));
-            return;
-        }
-
-        // execute all calculations where precedence is over
-            let operationFinished = this.operatorPrecedence[newOperator] < this.operatorPrecedence[calculation.lastOperator] || newOperator === ')';
-            for (let i = last; i >= 0; i--) {
-                // Is the Equation finished or is a operation with precedence (without open bracket) finished?
-                if ((newOperator === '=' || (!calculations[i].bracketOpen && operationFinished))
-                && calculations.length > 1) {
-                    calculations[i].executeCalculation(')');
-                    this.getResultAndDeleteCalculation(calculations);
-                } else {
-                    calculations[i].executeCalculation(newOperator);
-                    // get result of last calculation if bracket is finished
-                    if (newOperator === ')') this.getResultAndDeleteCalculation(calculations);
-                    return;
-                }
+    //calculate with operatorPrecedence
+    calc: function (equation) {
+        let equationArray = equation.split(' ').filter (el => el !== '');
+        let operatorPrecedence = ['^','/','*','-','+'];
+        operatorPrecedence.forEach( op => {
+          let i = -1;
+          while ((i = equationArray.indexOf(op)) !== -1) {
+            if (i > 0) {
+                equationArray[i - 1] = this[equationArray[i]](+equationArray[i - 1], +equationArray[i + 1]);
+                equationArray.splice(i, 2);
+            } else {
+            equationArray[i] = this[equationArray[i]](0, +equationArray[i + 1]);
+            equationArray.splice(i + 1, 1);
             }
-
-    },
+          }
+        });
+        return +equationArray[0];
+      },
     //split equation and parse array into calculations 
     processEquation: function(equation) {
-    let equationArray = equation.trim().split(/([+x/)(=^-])/);
-        let calculations = [new this.Calculation(0,'',0, false)];
-        let calculation;
-        equationArray.forEach( el => {
-            el = el.trim();
-            if(!el) return;
-            calculation = calculations[calculations.length -1];
-            if (isNaN(el)) {
-                this.checkPrecedenceAndCalculate(el, calculations);
-            } else {
-                calculation.currentNumber = Number(el);
-            } 
-        });
-        return calculations[0].savedNumber;
+        let equationStr = equation.join(' ');
+        let bracket = '';
+        while (bracket = (equationStr.match(/\([^\(\)]*\)/) || [])[0]) {
+            equationStr = equationStr.replace(bracket, this.calc((bracket === '()') ? '0' : bracket.slice(1,-1)));
+        }
+        return this.calc(equationStr);
     },
     // find index, where </sup> has to be inserted
-    findClosingPower: function(equation,indexStart) {
-        let openBrackets = 0;
-        for (let i = indexStart; i < equation.length; i++) {
-            if (equation.charAt(i) === '(') {
-                openBrackets++;
-            // do not use negative lookbehind (not working in safari)
-            //} else if ((equation.charAt(i).match(/([+x(?<!<)/)-])/g) || []).length === 1) {
-            // check if char is terminating <sup> and all brackets are closed
-            } else if ((equation.charAt(i).match(/([+x)-])/g) || []).length === 1
-                    || (equation.charAt(i) === '/' && equation.charAt(i-1) !== '<')) {
-                if (equation.charAt(i) === ')' && openBrackets) {
-                    openBrackets--;
-                }
-                if (openBrackets === 0) {
-                    // if ')' and open Bracket in Power return current index,
-                    // else return currentIndex -1 (</sup> has to be inserted before other operator)
-                    let equationPart = equation.slice(indexStart,i + 1);
-                    let operatorArray = equationPart.match(/([)(])/g) || [];
-                    let openBracketsInPower = 0;
-                    for (let j = 0; j < operatorArray.length - 1; j++) {
-                        if (operatorArray[j] === '(') {
-                            openBracketsInPower++;
-                        } else if (operatorArray[j] === ')') {
-                            openBracketsInPower--;
-                        }
-                    }
-                    return (equation.charAt(i) === ')' && openBracketsInPower >= 1) ? i : i - 1;
-                }
-            }
+    getClosingIndex: function(start, arr) {
+        let count = 1
+        for (let i = start + 1; i < arr.length; i++) {
+            count += (arr[i] === '(') ? 1 : ((arr[i] === ')') ? -1 : 0);
+            if (count === 0) return i;
         }
-        return null;
+        return arr.length -1;
     },
     // format Equation for displaying
-    formatEquation: function(equation){
-        //format all power operators
-        let powerIndex = equation.indexOf(' ^ ');
-        while (powerIndex > -1) {
-            let closingIndex = this.findClosingPower(equation, powerIndex + 3) || equation.length - 1;
-            equation = this.replaceAt(equation, powerIndex, ' ^ ', '<sup>');
-            equation = equation.slice(0,closingIndex + 3) + '</sup>' + equation.slice(closingIndex + 3);
-            powerIndex = equation.indexOf(' ^ ');
+    formatEquation: function(equationArr){
+        let equation = [...equationArr];
+        let string = ''
+        for (let i = 0; i < equation.length; i++) {
+            if (/\^/.test(equation[i])) {
+                string += (i === equation.length -1) ? equation[i].replace('^','<sup><span id="placeholder">0</span>') :'<sup>';
+                continue;
+            };
+            string+= equation[i];
+            if (equation[i-1] === '^' && equation[i] !== '(') {
+            string += '</sup>';
+            }
+            if (equation[i-1] === '^' && equation[i] === '(' ) {
+                equation[this.getClosingIndex(i, equation)] += '</sup>';
+            }
         }
         // Check Ending for formating
-        let lastChar = equation.charAt(equation.length - 1);
-        if (equation.indexOf('^</sup>') > -1) {
-            equation = equation.slice(0, equation.indexOf('^</sup>') - 1) + '<sup><span id="placeholder">0</span></sup></sup>';
-        } else if (lastChar === '^') {
-            equation = equation.slice(0,-2) + '<sup><span id="placeholder">0</span></sup>';
-        } else if (isNaN(lastChar) && lastChar !== '.' && lastChar !== '>' && lastChar !== ')' && lastChar !== '=') {
-            equation += '<span id="placeholder">' + ((lastChar !== '(') ? ' ' : '') + '0</span>';
+        let lastChar = string.charAt(string.length - 1);
+        if (isNaN(lastChar) && lastChar !== '.' && lastChar !== '>' && lastChar !== ')' && lastChar !== '=') {
+            string += '<span id="placeholder">0</span>';
         }
-        return equation;
-    },
-    // replace term in string
-    replaceAt: function(equation, index, search, replacement) {
-        let stringPt1 = equation.slice(0,index);
-        let stringPt2 = equation.slice(index);
-        stringPt2 = stringPt2.replace(search, replacement);
-        return stringPt1 + stringPt2;
+        return string;
     },
     //count OpenBrackets to determine if closing Bracket is valid input
     countOpenBrackets: function(equation) {
         const CLOSINGBRACKET = document.querySelector('#closing-bracket');
-        let openingBrackets = (equation.match(/\(/g) || []).length;
-        let closingBrackets = (equation.match(/\)/g) || []).length;
+        let openingBrackets = equation.filter(el => el === '(').length;
+        let closingBrackets = equation.filter(el => el === ')').length;
         let openBrackets = openingBrackets - closingBrackets;
         if (openBrackets > 0) {
             CLOSINGBRACKET.style.opacity = '100%';
@@ -195,77 +89,44 @@ let calculator = {
         }
         return openBrackets
     },
-    // handle invalid operator input
-    handleOperatorExceptions: function(equation, clickedButton) {
-        let lastChar = equation.charAt(equation.length - 1);
-        if (equation === '' && clickedButton !== '(') {
-            clickedButton = '0 ' + clickedButton;
-        } else if (clickedButton === '(' && equation.length > 0 && (!isNaN(lastChar) || lastChar === '.')) {
-            clickedButton = ' x ' + clickedButton;
-        } else if (isNaN(lastChar) && lastChar !== '.') {
-            if (lastChar === '(' && clickedButton === ')') {
-                clickedButton = '0' + clickedButton;
-            } else if (lastChar === '(' && clickedButton !== '(') {
-                clickedButton = '0 ' + clickedButton;
-            } else if (lastChar !== ')'  && clickedButton === ')') {
-                clickedButton = ' 0' + clickedButton;
-            } else if (lastChar !== ')' && clickedButton !== '(') {
-                clickedButton = ' 0 ' + clickedButton;
-            }
+    // add Number to equation Array
+    addNumber: function(equation,clickedButton) {
+    let lastEl = equation[equation.length - 1];
+        if (typeof lastEl === 'undefined') equation[0] = '';
+        if (isNaN(lastEl) && typeof lastEl !== 'undefined' && !(lastEl === '-' && isNaN(equation[equation.length - 2])
+        && equation[equation.length - 2] !== ')')) {
+            if (clickedButton === '.') clickedButton = '0' + clickedButton;
+            equation.push(clickedButton);
+        } else {
+            if (equation[equation.length - 1] === '' && clickedButton === '.') clickedButton = '0' + clickedButton;
+            equation[equation.length - 1] += clickedButton;
         }
-        if (clickedButton.length === 1 && clickedButton !== ')' && lastChar !== '(') {
-            clickedButton = ' ' + clickedButton;
-        }
-        return clickedButton;
-    },
-    // handle invalid number input
-    handleNumberExceptions: function(equation,clickedButton) {
-        let lastChar = equation.charAt(equation.length - 1);
-        if (equation === '' && clickedButton === '.') {
-            clickedButton = '0' + clickedButton;
-        } else if (isNaN(lastChar) && lastChar !== '.' && lastChar !== '(') {
-            clickedButton = ((lastChar !== ')') ? ' ' : ' x ') + clickedButton;
-        }
-        return clickedButton;
     },
     //process user input
     processInput: function(clickedButton, equation) {
-        const DISPLAY = document.querySelector('#display');
-        const EQUATION = document.querySelector('#equation-text');
-        let openBrackets;
+        let openBrackets = this.countOpenBrackets(equation.concat([clickedButton]));
         if (isNaN(clickedButton) && clickedButton !== '.') {
             if (clickedButton === 'CE') {
-                equation = this.clear(equation);
-                EQUATION.innerHTML = this.formatEquation((equation === '') ? '<span id="placeholder">0</span>' : equation);
-                EQUATION.scrollLeft = EQUATION.scrollWidth;
-                DISPLAY.textContent = this.roundNumber(this.processEquation(equation + '='));
-                this.countOpenBrackets(equation + clickedButton);
+                this.clear(equation);
                 return equation;
             }
-
-            if (equation.indexOf('=') > -1) equation = DISPLAY.textContent;
-            if (clickedButton === '(' || clickedButton === ')') {
-                openBrackets = this.countOpenBrackets(equation + clickedButton);
-                if (openBrackets < 0) {
-                    return equation;
-                }
+            if (equation.indexOf('=') > -1) equation = [this.DISPLAY.textContent];
+            if (openBrackets < 0) {
+                return equation;
             }
-            
-            clickedButton = this.handleOperatorExceptions(equation,clickedButton);
-            equation += clickedButton;
-            EQUATION.innerHTML = this.formatEquation(equation);
-            EQUATION.scrollLeft = EQUATION.scrollWidth;
-            DISPLAY.textContent = this.roundNumber(this.processEquation((equation.indexOf('=') > -1) ? equation : equation + '='));
+            equation.push(clickedButton);
         } else {
-            if (equation.indexOf('=') > -1) equation = '';
-            clickedButton = this.handleNumberExceptions(equation, clickedButton);
-            equation += clickedButton;
-            EQUATION.innerHTML = this.formatEquation(equation);
-            EQUATION.scrollLeft = EQUATION.scrollWidth;
-            DISPLAY.textContent = this.roundNumber(this.processEquation(equation + '='));
+            if (equation.indexOf('=') > -1) equation = [''];
+            this.addNumber(equation,clickedButton);
+        }
+        this.EQUATION.innerHTML = this.formatEquation(equation);
+        this.EQUATION.scrollLeft = this.EQUATION.scrollWidth;
+        if (clickedButton !== '=') {
+            this.DISPLAY.textContent = this.roundNumber(this.processEquation(equation.concat(Array(openBrackets).fill(')'))));
         }
         return equation;
-    }, roundNumber: function(string) {
+    },
+    roundNumber: function(string) {
         let number = +string;
         let result =  ((number % 1 === 0) ? number : number.toFixed(2));
         let i = ''
@@ -282,10 +143,8 @@ let calculator = {
     },
     //start calculator
     main: function() {
-        this.setCalculationProtoype();
-        this.calculations = [new this.Calculation(0,'',0, false)];
         const BUTTONS = document.querySelectorAll('button');
-        let equation = '';
+        let equation = [''];
         BUTTONS.forEach(button => {
             button.addEventListener('click', () => {
                 let input = (button.id !== 'power') ? button.textContent : '^';
@@ -298,7 +157,7 @@ let calculator = {
                 'Dead': '^',
                 'Backspace': 'CE'
             }
-            let allowedKeys = ['0','1','2','3','4','5','6','7','8','9','(',')','^','CE','/','x','-','+','-','=','.'];
+            let allowedKeys = ['0','1','2','3','4','5','6','7','8','9','(',')','^','CE','/','*','-','+','-','=','.'];
             if (e.key !== undefined) {
                 code = e.key;
             } else if (e.keyIdentifier !== undefined) {
